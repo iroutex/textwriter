@@ -1,0 +1,75 @@
+## Importance of Exploratory Data Analysis
+Exploratory Data Analysis is an important aspect of Data Science. It helps in understanding the distribution of the dataset and more. One way of approaching EDA is to create questions and build visual charts to extract the information. We will use a Q&A process to understand the Vietnamese dataset while exploring we will also touch the importance of using the right statistic parameters when creating Charts. The Vietnamese government had some critical questions based on which they wanted to move from a centrally planned command economy to a market economy. The countries economy was in a downward trend and the government needs states to pull the country out of a famine situation. We will see how Exploratory Data Analysis was used to get insights from the questions. They have used data prepared by VLSSage for exploration.
+ 
+1. What is the age distribution for the Vietnamese population?
+![](../../../../Pictures/Screenshot from 2020-05-13 09-03-32.png)
+
+The age distribution is plotted using a Histogram, The x-axis describes the age range and the y-axis describes the frequency (no. of person count). A sample code snippet to show how to plot a Histogram using Altair ( is a python implementation over Vega charts)
+	
+	import altair as alt
+	import pandas as pd
+	
+	data = pd.read_csv('/home/vietnamese.csv')
+	
+	alt.Chart(weather).mark_bar().encode(
+    alt.X("Age", title='age'),
+    alt.Y('Age', aggregate='sum', title='frequency')
+	)
+
+
+**Histogram - Bins**
+
+Configuring the right number of bins brings out hidden informations from the data. In our case using a bin size of 55 brings a distinct division on the young, the middle-aged, and the old. This information is lost when we set the bin size to 10. And Also we can see the second highest mode around 40 years but as low frequency, like when we compared to the 20 years.  
+	![](../../../../Pictures/Screenshot from 2020-05-13 09-25-11.png)
+	
+Coming up with bins, brings out additional information in the dataset. A data exploration doesn't stop with plotting but also assigning the right metrics to the chart's attributes. When the bin size is not provided the EDA packages apply default bin sizes (in the first code snippet) which will not display all the information in the dataset. If we have enough knowledge on the data we can decide a right size to the bins to bring out the insights. If we don't have knowledge about the data we have a statistical way of calculating the size of the bin using Freedman & Diaconis, Scott, Sturges, Wand. Implementation of Freedman & Diaconis
+	
+	def freedman_diaconis_rule(data,col):
+	    freedman_bin_width = 2*(iqr(data[col]) / np.cbrt(len(data[col])))
+		return freedman_bin_width
+
+The code uses IQR - means interquartile range of the given distrubution and cbrt is the cubic root of the total count of given sample.The above implementation gives the bin width from which we can find the bin size. To calculate the bin size (column_range/ bin_width). Example we have bin_width=2 and we have an age range 0-100. Then the number of bins for the histogram would be 100/2 = 50 bins.
+
+**Density Plots - Kernel Density Estimator**
+Using Density plots instead of histogram will remove the complexity of coming up with the right bin size. Density charts is a variation of Histogram using kernel smoothing to the plot values. The peaks of the density plots says about the concentration of values over the interval. Advantages of using a Density plot is it provides the shape of the distribution. This would not be obtained without using the size of a right bin with Histograms. Density Plots can be used in Anomaly detection and novelty detection. The value which appears in the less concentrated area will be an Anomaly.
+
+The Kernel Density of a variable can be calculated using the below expression. 
+
+![](https://cdn.mathpix.com/snip/images/jWYafoYeXRlcjc-LgOaaQ87bFnbccFo66uxRhmxrxSY.original.fullsize.png)
+
+Where p(x) gives the total bump, K the kernel function, x is the point where the density is estimated and h is the bandwidth, K and h are to be provided by methodologist. If not provided by a methodologist, we can use the below statistical theory to determine bandwidth.
+
+![](https://cdn.mathpix.com/snip/images/MTcuX56otafqdnfsSnoKbTQtoKO2qQ_tHSHc9CPLjgE.original.fullsize.png)
+
+The h value obtained cannot serve as the optimal bandwidth, but it can be used as the starting value of the bandwidth and then decremented until the plot becomes rough. Bandwith=0.5 is rough and Bandwith=2 becomes smoother. 
+
+![](../../../../Pictures/Screenshot from 2020-05-13 13-15-26.png)
+
+The plot with Bandwidth=2 looks smoother and we can see the partitions of the age between young, middle-aged, and old, whereas the density curve is too smooth without bumps when the bandwidth=10.
+
+
+2. Are there differences in the annual household per capita expenditures
+between the rural and urban populations in Vietnam?
+
+![](../../../../Pictures/Screenshot from 2020-05-13 13-27-23.png)
+
+Density plots support more than one variable to be plotted at the same space, here we have a comparison of Rural and Urban. We can see a steep peak for the rural which shows clearly that rural are living in poverty than the urban. Since the right shit to the rural curve is less, which makes even a small increase in the expenditures will bring more rural people below poverty status and the people living in the urban areas.
+
+To get the difference between the expenditure per capita, we need to make the difference between the sample mean the difference between the two groups(rural and urban).
+
+		diff in exp per capita (rural and urban) = mean(urban_Exp per capita) - mean(rural_Exp per capita) 
+		
+Unfortunately, we can see that both the groups are heavily skewed. Calculating the mean difference would not be the right because the mean of the two distributions doesn't fall at the center of the distribution. In this case, we can normalize the skewness and find the central dependencies using Winzoried mean or Trimmed mean.
+
+3. Are there differences in the annual household per capita expenditures
+between the seven Vietnamese regions? 
+
+![](../../../../Pictures/Screenshot from 2020-05-13 14-09-00.png)
+
+In case of more number of variable in a distribution use a box-plot. We can use Density plot for showing the expenditure per capita. We would end up creating 7 plots for each region, or merge the 7 graphs into one either way it would become hard to extract information. 
+
+### Summary
+We don't give more emphasis on whether the dataset has all the required samples ready for the Machine learning process. We have to create questions that would bring some information out of the data. Some questions can be answered directly by applying a statistical formula. But sometimes we need visual interpretations to understand the distribution of a variable or to find the inter-dependencies between two variables in the set., etc. Here we have discussed the importance of tuning the visualization tools and it's parameters to give the correct insights or sometimes the hidden insights.
+
+### Reference 
+- http://theta.edu.pl/wp-content/uploads/2012/10/exploratorydataanalysis_tukey.pdf  
